@@ -304,8 +304,8 @@ function createProductCard(product) {
     
     // Apply grayscale filter for sold out items
     const cardClasses = isOutOfStock 
-        ? 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow grayscale opacity-75'
-        : 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow';
+        ? 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow grayscale opacity-75 w-full'
+        : 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow w-full';
     
     card.className = cardClasses;
     
@@ -314,7 +314,7 @@ function createProductCard(product) {
     console.log('Using fixed image path:', imagePath);
     
     const imageContent = `
-        <img src="${imagePath}" alt="${product.product_name}" class="w-full h-full object-cover rounded-t-lg" onerror="console.log('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <img src="${imagePath}" alt="${product.product_name}" class="w-full aspect-square object-cover rounded-t-lg" onerror="console.log('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
         <div class="aspect-square bg-gray-100 rounded-t-lg flex items-center justify-center" style="display:none;">
             <span class="text-gray-400">No Image</span>
         </div>
@@ -325,14 +325,14 @@ function createProductCard(product) {
             ${imageContent}
             ${isOutOfStock ? '<div class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">SOLD OUT</div>' : ''}
         </div>
-        <div class="p-4">
-            <h3 class="font-bold text-sm mb-2 text-gray-900">${product.product_name || 'Product'}</h3>
-            <p class="text-gray-600 text-xs mb-3">${product.description || 'Product description'}</p>
-            <div class="flex items-center justify-between mb-4">
-                <span class="text-lg font-bold text-gray-900">${product.price || '0'}</span>
+        <div class="p-3">
+            <h3 class="font-bold text-sm mb-1 text-gray-900 truncate">${product.product_name || 'Product'}</h3>
+            <p class="text-gray-600 text-xs mb-2 line-clamp-2">${product.description || 'Product description'}</p>
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-gray-900">${product.price || '0'}</span>
                 <span class="text-xs text-gray-500">Stock: ${product.stock || 0}</span>
             </div>
-            <button class="w-full py-2 rounded-lg font-medium transition-colors text-sm ${
+            <button class="w-full py-2 rounded-lg font-medium transition-colors text-xs ${
                 isOutOfStock 
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                     : 'bg-indigo-600 text-white hover:bg-indigo-700'
