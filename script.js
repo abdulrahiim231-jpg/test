@@ -123,19 +123,60 @@ async function updateStock(productId, newStock) {
     }
 }
 
-// Complete checkout and update stock
-async function completeCheckout() {
+// Complete order system
+async function completeOrder() {
     try {
-        // Create a map of product names to quantities
-        const productQuantities = {};
-        cart.forEach(item => {
-            if (!productQuantities[item.name]) {
-                productQuantities[item.name] = 0;
-            }
-            productQuantities[item.name] += item.quantity;
-        });
+        if (cart.length === 0) {
+            showNotification('Your cart is empty', 'error');
+            return;
+        }
         
-        // Fetch current products to get their IDs
+        // Step A: Prepare order message
+        const orderMessage = prepareOrderMessage();
+        
+        // Step B: Update stock in Supabase
+        const stockUpdateSuccess = await updateStockForCartItems();
+        
+        if (stockUpdateSuccess) {
+            // Step C: WhatsApp redirect with order message
+            sendOrderToWhatsApp(orderMessage);
+            
+            // Step D: Empty cart
+            cart = [];
+            updateCartCount();
+            closeCart();
+            
+            showNotification('Order completed successfully!', 'success');
+            
+            // Refresh products to show updated stock
+            setTimeout(() => {
+                renderProducts();
+            }, 1000);
+        } else {
+            showNotification('Failed to update stock. Please try again.', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Order completion error:', error);
+        showNotification('Order failed. Please try again.', 'error');
+    }
+}
+
+// Prepare formatted order message
+function prepareOrderMessage() {
+    const orderItems = cart.map(item => 
+        `${item.name}: $${item.price.toFixed(2)} x ${item.quantity} = $${(item.price * item.quantity).toFixed(2)}`
+    ).join('\n');
+    
+    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2);
+    
+    return `🛒 NEW ORDER 🛒\n\n📋 Order Details:\n${orderItems}\n\n💰 Total Bill: $${totalAmount}\n\n✅ Order confirmed!`;
+}
+
+// Update stock for each cart item in Supabase
+async function updateStockForCartItems() {
+    try {
+        // Fetch current products
         const response = await fetch(`${SUPABASE_URL}product`, {
             headers: {
                 'apikey': SUPABASE_ANON_KEY,
@@ -145,90 +186,52 @@ async function completeCheckout() {
         });
         
         if (!response.ok) {
-            throw new Error('Failed to fetch products for checkout');
+            throw new Error('Failed to fetch products');
         }
         
         const products = await response.json();
         
-        // Update stock for each product
-        const updatePromises = [];
-        products.forEach(product => {
-            const quantityToReduce = productQuantities[product.product_name];
-            if (quantityToReduce && quantityToReduce > 0) {
-                const newStock = product.stock - quantityToReduce;
-                if (newStock >= 0) {
-                    updatePromises.push(
-                        fetch(`${SUPABASE_URL}product?id=eq.${product.id}`, {
-                            method: 'PATCH',
-                            headers: {
-                                'apikey': SUPABASE_ANON_KEY,
-                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                                'Content-Type': 'application/json',
-                                'Prefer': 'return=minimal'
-                            },
-                            body: JSON.stringify({ stock: newStock })
-                        })
-                    );
-                }
+        // Update stock for each cart item
+        const updatePromises = cart.map(cartItem => {
+            const product = products.find(p => p.name === cartItem.name);
+            if (product && product.stock > 0) {
+                const newStock = product.stock - 1; // Reduce by 1 for each item in cart
+                
+                return fetch(`${SUPABASE_URL}product?id=eq.${product.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ stock: newStock })
+                });
             }
+            return Promise.resolve(true);
         });
         
-        // Wait for all stock updates to complete
         const results = await Promise.all(updatePromises);
-        const allSuccessful = results.every(response => response.ok);
-        
-        if (allSuccessful) {
-            // Clear cart after successful checkout
-            cart = [];
-            updateCartCount();
-            closeCart();
-            showNotification('Order completed successfully! Stock updated.', 'success');
-            
-            // Send WhatsApp message
-            sendWhatsAppOrderConfirmation();
-            
-            // Refresh products to show updated stock
-            setTimeout(() => {
-                renderProducts();
-            }, 1000);
-            
-            return true;
-        } else {
-            showNotification('Some items could not be updated. Please try again.', 'error');
-            return false;
-        }
+        return results.every(result => result && result.ok);
         
     } catch (error) {
-        console.error('Checkout error:', error);
-        showNotification('Checkout failed. Please try again.', 'error');
+        console.error('Stock update error:', error);
         return false;
     }
 }
 
-// Send WhatsApp order confirmation
-function sendWhatsAppOrderConfirmation() {
+// Send order to WhatsApp
+function sendOrderToWhatsApp(message) {
     try {
-        // Store cart data before clearing
-        const cartData = [...cart];
-        
-        // Create order summary
-        const orderItems = cartData.map(item => `${item.name} (Qty: ${item.quantity})`).join('\n');
-        const totalAmount = cartData.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2);
-        
-        const message = `🛒 NEW ORDER RECEIVED 🛒\n\n📦 Order Details:\n${orderItems}\n\n💰 Total Amount: $${totalAmount}\n\n✅ Stock has been updated automatically.\n\nThank you for your purchase!`;
-        
-        // WhatsApp URL with phone number
         const phoneNumber = '03006955087';
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-        
-        // Open WhatsApp in new tab
         window.open(whatsappUrl, '_blank');
         
-        console.log('WhatsApp message sent to:', phoneNumber);
-        showNotification('Order confirmation sent to WhatsApp!', 'success');
+        console.log('Order sent to WhatsApp:', phoneNumber);
+        showNotification('Order sent to WhatsApp!', 'success');
         
     } catch (error) {
-        console.error('Error sending WhatsApp message:', error);
+        console.error('WhatsApp error:', error);
         showNotification('Failed to send WhatsApp message', 'error');
     }
 }
@@ -396,24 +399,55 @@ function attachEventListeners() {
 
 // Add to cart functionality
 function addToCart(productName, price) {
-    // Check if item already exists in cart
-    const existingItem = cart.find(item => item.name === productName);
-    
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        cart.push({
-            name: productName,
-            price: parseFloat(price),
-            quantity: 1
+    // Check if product is in stock before adding
+    checkProductStock(productName).then(isInStock => {
+        if (!isInStock) {
+            showNotification('Product is out of stock!', 'error');
+            return;
+        }
+        
+        // Check if item already exists in cart
+        const existingItem = cart.find(item => item.name === productName);
+        
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({
+                name: productName,
+                price: parseFloat(price),
+                quantity: 1
+            });
+        }
+        
+        cartCount++;
+        updateCartCount();
+        
+        showNotification(`${productName} added to cart!`);
+    });
+}
+
+// Check if product is in stock
+async function checkProductStock(productName) {
+    try {
+        const response = await fetch(`${SUPABASE_URL}product?name=eq.${productName}`, {
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json'
+            }
         });
+        
+        if (!response.ok) {
+            return false;
+        }
+        
+        const products = await response.json();
+        return products.length > 0 && products[0].stock > 0;
+        
+    } catch (error) {
+        console.error('Stock check error:', error);
+        return false;
     }
-    
-    cartCount++;
-    updateCartCount();
-    
-    // Show success message
-    showNotification(`${productName} added to cart!`);
 }
 
 // Show notification
@@ -468,26 +502,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', async function() {
             if (cart.length > 0) {
-                // Show confirmation dialog
-                const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-                const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2);
-                
-                if (confirm(`Complete order?\nItems: ${totalItems}\nTotal: $${totalPrice}\n\nThis will update stock levels.`)) {
+                if (confirm('Complete your order? This will update stock and send order details to WhatsApp.')) {
                     checkoutBtn.disabled = true;
                     checkoutBtn.textContent = 'Processing...';
                     
-                    const success = await completeCheckout();
+                    await completeOrder();
                     
-                    if (success) {
-                        checkoutBtn.textContent = 'Order Completed!';
-                        setTimeout(() => {
-                            checkoutBtn.disabled = false;
-                            checkoutBtn.textContent = 'Proceed to Checkout';
-                        }, 2000);
-                    } else {
-                        checkoutBtn.disabled = false;
-                        checkoutBtn.textContent = 'Proceed to Checkout';
-                    }
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.textContent = 'Proceed to Checkout';
                 }
             } else {
                 showNotification('Your cart is empty', 'error');
