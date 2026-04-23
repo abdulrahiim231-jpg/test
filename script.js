@@ -304,8 +304,8 @@ function createProductCard(product) {
     
     // Apply grayscale filter for sold out items
     const cardClasses = isOutOfStock 
-        ? 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow grayscale opacity-75 w-full'
-        : 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow w-full';
+        ? 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow grayscale opacity-75 w-full flex flex-col'
+        : 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow w-full flex flex-col';
     
     card.className = cardClasses;
     
@@ -314,8 +314,8 @@ function createProductCard(product) {
     console.log('Using image URL from database:', imagePath);
     
     const imageContent = `
-        <img src="${imagePath}" alt="${product.name}" class="w-full aspect-[4/3] object-cover rounded-t-lg" onerror="console.log('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="aspect-[4/3] bg-gray-100 rounded-t-lg flex items-center justify-center" style="display:none;">
+        <img src="${imagePath}" alt="${product.name}" class="w-full h-48 object-cover rounded-t-lg" onerror="console.log('Image failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="h-48 bg-gray-100 rounded-t-lg flex items-center justify-center" style="display:none;">
             <span class="text-gray-400">No Image</span>
         </div>
     `;
