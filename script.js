@@ -325,14 +325,14 @@ function createProductCard(product) {
             ${imageContent}
             ${isOutOfStock ? '<div class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">SOLD OUT</div>' : ''}
         </div>
-        <div class="p-6">
-            <h3 class="font-bold text-lg mb-2 text-gray-900">${product.product_name || 'Product'}</h3>
-            <p class="text-gray-600 text-sm mb-3">${product.description || 'Product description'}</p>
+        <div class="p-4">
+            <h3 class="font-bold text-sm mb-2 text-gray-900">${product.product_name || 'Product'}</h3>
+            <p class="text-gray-600 text-xs mb-3">${product.description || 'Product description'}</p>
             <div class="flex items-center justify-between mb-4">
-                <span class="text-2xl font-bold text-gray-900">${product.price || '0'}</span>
-                <span class="text-sm text-gray-500">Stock: ${product.stock || 0}</span>
+                <span class="text-lg font-bold text-gray-900">${product.price || '0'}</span>
+                <span class="text-xs text-gray-500">Stock: ${product.stock || 0}</span>
             </div>
-            <button class="w-full py-2 rounded-lg font-medium transition-colors ${
+            <button class="w-full py-2 rounded-lg font-medium transition-colors text-sm ${
                 isOutOfStock 
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                     : 'bg-indigo-600 text-white hover:bg-indigo-700'
