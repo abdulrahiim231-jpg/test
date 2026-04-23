@@ -224,8 +224,19 @@ async function updateStockForCartItems() {
 function sendOrderToWhatsApp(message) {
     try {
         const phoneNumber = '+923006955087';
-        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
+        
+        // Show confirmation alert first
+        const userConfirmed = confirm('Confirm Order?\n\nYour order details will be sent to WhatsApp.\nClick OK to continue.');
+        
+        if (!userConfirmed) {
+            return; // User cancelled
+        }
+        
+        // Use api.whatsapp.com for better iPhone support
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+        
+        // Use location.assign for better Safari compatibility
+        window.location.assign(whatsappUrl);
         
         console.log('Order sent to WhatsApp:', phoneNumber);
         showNotification('Order sent to WhatsApp!', 'success');
