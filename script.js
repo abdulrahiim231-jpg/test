@@ -223,7 +223,7 @@ async function updateStockForCartItems() {
 // Send order to WhatsApp
 function sendOrderToWhatsApp(message) {
     try {
-        const phoneNumber = '03006955087';
+        const phoneNumber = '+923006955087';
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
         
