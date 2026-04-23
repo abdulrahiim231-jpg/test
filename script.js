@@ -184,6 +184,9 @@ async function completeCheckout() {
             closeCart();
             showNotification('Order completed successfully! Stock updated.', 'success');
             
+            // Send WhatsApp message
+            sendWhatsAppOrderConfirmation();
+            
             // Refresh products to show updated stock
             setTimeout(() => {
                 renderProducts();
@@ -199,6 +202,34 @@ async function completeCheckout() {
         console.error('Checkout error:', error);
         showNotification('Checkout failed. Please try again.', 'error');
         return false;
+    }
+}
+
+// Send WhatsApp order confirmation
+function sendWhatsAppOrderConfirmation() {
+    try {
+        // Store cart data before clearing
+        const cartData = [...cart];
+        
+        // Create order summary
+        const orderItems = cartData.map(item => `${item.name} (Qty: ${item.quantity})`).join('\n');
+        const totalAmount = cartData.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2);
+        
+        const message = `🛒 NEW ORDER RECEIVED 🛒\n\n📦 Order Details:\n${orderItems}\n\n💰 Total Amount: $${totalAmount}\n\n✅ Stock has been updated automatically.\n\nThank you for your purchase!`;
+        
+        // WhatsApp URL with phone number
+        const phoneNumber = '03006955087';
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        
+        // Open WhatsApp in new tab
+        window.open(whatsappUrl, '_blank');
+        
+        console.log('WhatsApp message sent to:', phoneNumber);
+        showNotification('Order confirmation sent to WhatsApp!', 'success');
+        
+    } catch (error) {
+        console.error('Error sending WhatsApp message:', error);
+        showNotification('Failed to send WhatsApp message', 'error');
     }
 }
 
