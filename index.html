@@ -4,39 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baby Store - Premium Baby Products</title>
+    
+    <!-- TAILWIND CSS: For utility-first styling and responsive design -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- CANVAS-CONFETTI: For luxury order success animations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- GOOGLE FONTS: Playfair Display (luxury serif) + Montserrat (clean sans-serif) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        'serif': ['DM Serif Display', 'serif'],
-                        'sans': ['Inter', 'sans-serif'],
+                        'serif': ['Playfair Display', 'Lora', 'serif'],
+                        'sans': ['Montserrat', 'Inter', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="font-sans">
+<body class="font-sans bg-white">
     <!-- Header -->
     <header class="sticky top-0 z-50 bg-white shadow-sm">
-        <nav class="container mx-auto px-6 py-4">
+        <nav class="container mx-auto px-8 py-6">
             <div class="flex items-center justify-between">
                 <!-- Logo -->
                 <div class="flex items-center">
-                    <h1 class="text-2xl font-serif font-bold text-gray-900">BabyStore</h1>
+                    <h1 class="text-2xl font-serif font-bold text-blue-900">BabyStore</h1>
                 </div>
                 
                 <!-- Navigation Links -->
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#" class="text-gray-700 hover:text-gray-900 transition-colors font-medium">Home</a>
-                    <a href="#products" class="text-gray-700 hover:text-gray-900 transition-colors font-medium">Shop</a>
-                    <a href="#" class="text-gray-700 hover:text-gray-900 transition-colors font-medium">About</a>
-                    <a href="#" class="text-gray-700 hover:text-gray-900 transition-colors font-medium">Contact</a>
+                <div class="hidden md:flex items-center space-x-12">
+                    <a href="#home" class="text-gray-700 hover:text-blue-900 transition-colors font-medium smooth-scroll">Home</a>
+                    <a href="#products" class="text-gray-700 hover:text-blue-900 transition-colors font-medium smooth-scroll">Shop</a>
+                    <a href="#footer" class="text-gray-700 hover:text-blue-900 transition-colors font-medium smooth-scroll">Contact</a>
                 </div>
                 
                 <!-- Cart Icon -->
@@ -53,28 +59,71 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="bg-gradient-to-br from-indigo-900 to-purple-900 text-white py-24">
-        <div class="container mx-auto px-6 text-center">
-            <h2 class="text-5xl md:text-6xl font-serif font-bold mb-6">Premium Baby Essentials</h2>
-            <p class="text-xl md:text-2xl mb-8 text-indigo-100">Curated collections for your little ones</p>
-            <button class="bg-white text-indigo-900 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors transform hover:scale-105 transition-transform">
-                Shop Now
-            </button>
+    <section id="home" class="relative h-screen overflow-hidden">
+        <!-- Background Image -->
+        <div class="absolute inset-0">
+            <img src="cover.jpeg" alt="Luxury Baby Products" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-black/30"></div>
+        </div>
+        
+        <!-- Glassmorphism Card -->
+        <div class="relative h-full flex items-center justify-center px-6">
+            <div class="bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl p-10 md:p-16 max-w-3xl w-full text-center">
+                <h1 class="text-4xl md:text-6xl font-serif font-bold mb-6 text-yellow-400 drop-shadow-lg">Premium Baby Essentials</h1>
+                <p class="text-lg md:text-xl mb-8 text-white/90 drop-shadow-md">Curated collections for your little ones</p>
+                <button class="smooth-scroll bg-white/20 backdrop-blur-md text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-white/30 transition-all duration-300 transform hover:scale-105 border border-white/30" href="#products">
+                    Shop Now
+                </button>
+            </div>
+        </div>
+        
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <div class="flex flex-col items-center text-white/80">
+                <span class="text-sm mb-2">Scroll</span>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+            </div>
         </div>
     </section>
 
     <!-- Product Grid -->
-    <section id="products" class="py-16 bg-gray-50">
+    <section id="products" class="py-16 bg-white">
         <div class="container mx-auto px-6">
-            <h2 class="text-4xl font-serif font-bold text-center mb-12 text-gray-900">Featured Products</h2>
+            <h2 class="text-4xl font-serif font-bold text-center mb-8 text-gray-900">Featured Products</h2>
             
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 p-2" id="productsGrid">
+            <!-- Filter and Search Section -->
+            <div class="mb-8">
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <!-- Filter Buttons -->
+                    <div class="flex gap-2">
+                        <button class="category-btn px-4 py-2 rounded-lg font-medium transition-colors bg-indigo-600 text-white" data-category="All">
+                            All
+                        </button>
+                        <button class="category-btn px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300" data-category="design">
+                            Design
+                        </button>
+                        <button class="category-btn px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300" data-category="Coat">
+                            Coat
+                        </button>
+                    </div>
+                    
+                    <!-- Search Bar -->
+                    <div class="w-full md:w-auto">
+                        <input type="text" id="searchInput" placeholder="Search products..." 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-10 p-2" id="productsGrid">
                 <!-- Products will be dynamically loaded here from Supabase -->
             </div>
         </div>
     </section>
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
+    <footer id="footer" class="bg-gray-900 text-white py-12">
         <div class="container mx-auto px-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <!-- Logo and Description -->
@@ -112,13 +161,51 @@
             </div>
         </div>
     </footer>
-<!-- Cart Modal -->
-<div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Shopping Cart</h2>
+    
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white/10 backdrop-blur-lg rounded-3xl border border-white/20 shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <!-- Animated Checkmark -->
+                <div class="w-20 h-20 mx-auto mb-6">
+                    <svg class="w-full h-full text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" class="stroke-green-400 fill-green-400/20"></circle>
+                        <path d="M8 12l2 2 4-4" class="stroke-white checkmark-animate"></path>
+                    </svg>
+                </div>
+                
+                <h2 class="text-3xl font-serif font-bold text-white mb-4">Order Confirmed!</h2>
+                <p class="text-white/80 mb-6">Your order has been successfully placed and WhatsApp message has been sent.</p>
+                
+                <div class="flex items-center justify-center space-x-2 text-green-400">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm font-medium">Success</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTop" class="fixed bottom-8 right-8 bg-blue-900 text-white p-3 rounded-full shadow-lg hover:bg-blue-800 transition-all duration-300 transform hover:scale-110 opacity-0 pointer-events-none z-50">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+    
+    <!-- Cart Modal -->
+    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Shopping Cart</h2>
+                        <button id="closeCart" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
                     <button id="closeCart" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

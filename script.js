@@ -1,14 +1,25 @@
 // Baby Store JavaScript
 
-// Supabase configuration
+// ==========================================
+// SUPABASE DATABASE CONFIGURATION
+// ==========================================
+// URL: REST API endpoint for Supabase database
+// ANON_KEY: Public authentication key for API access
 const SUPABASE_URL = 'https://dylgzqfgcfsrjfejjhjy.supabase.co/rest/v1/';
 const SUPABASE_ANON_KEY = 'sb_publishable_bHly-c0wyjZeKsj8pghYbw_TVhG5pyx';
 
-// Cart functionality
+// ==========================================
+// GLOBAL VARIABLES
+// ==========================================
+// cart: Array to store shopping cart items
+// cartCount: Counter for total items in cart
 let cart = [];
 let cartCount = 0;
 
-// Cart modal functions
+// ==========================================
+// CART MODAL FUNCTIONS
+// ==========================================
+// Function to open the cart modal
 function openCart() {
     const modal = document.getElementById('cartModal');
     modal.classList.remove('hidden');
@@ -123,32 +134,38 @@ async function updateStock(productId, newStock) {
     }
 }
 
-// Complete order system
+// ==========================================
+// ORDER COMPLETION SYSTEM
+// ==========================================
+// completeOrder: Main function to process entire order workflow
+// Steps: 1) Validate cart, 2) Prepare message, 3) Update stock, 4) Send WhatsApp, 5) Clear cart
 async function completeOrder() {
     try {
+        // Validation: Check if cart has items
         if (cart.length === 0) {
             showNotification('Your cart is empty', 'error');
             return;
         }
         
-        // Step A: Prepare order message
+        // Step A: Format order details for WhatsApp message
         const orderMessage = prepareOrderMessage();
         
-        // Step B: Update stock in Supabase
+        // Step B: Update product stock in Supabase database
+        // This reduces stock by 1 for each item in cart
         const stockUpdateSuccess = await updateStockForCartItems();
         
         if (stockUpdateSuccess) {
-            // Step C: WhatsApp redirect with order message
+            // Step C: Send order details to WhatsApp
             sendOrderToWhatsApp(orderMessage);
             
-            // Step D: Empty cart
+            // Step D: Clear cart and update UI
             cart = [];
             updateCartCount();
             closeCart();
             
             showNotification('Order completed successfully!', 'success');
             
-            // Refresh products to show updated stock
+            // Refresh product grid to show updated stock levels
             setTimeout(() => {
                 renderProducts();
             }, 1000);
@@ -232,6 +249,12 @@ function sendOrderToWhatsApp(message) {
             return; // User cancelled
         }
         
+        // Trigger confetti animation
+        triggerConfetti();
+        
+        // Show success modal
+        showSuccessModal();
+        
         // Use api.whatsapp.com for better iPhone support
         const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
         
@@ -245,6 +268,97 @@ function sendOrderToWhatsApp(message) {
         console.error('WhatsApp error:', error);
         showNotification('Failed to send WhatsApp message', 'error');
     }
+}
+
+// Trigger confetti animation
+function triggerConfetti() {
+    // Create multiple confetti bursts for luxury effect
+    const count = 200;
+    const defaults = {
+        origin: { y: 0.7 }
+    };
+
+    function fire(particleRatio, opts) {
+        confetti(Object.assign({}, defaults, opts, {
+            particleCount: Math.floor(count * particleRatio)
+        }));
+    }
+
+    // Gold and white confetti for luxury feel
+    fire(0.25, {
+        spread: 26,
+        startVelocity: 55,
+        colors: ['#FFD700', '#FFFFFF', '#FFF8DC', '#F0E68C']
+    });
+    
+    fire(0.2, {
+        spread: 60,
+        colors: ['#FFD700', '#FFFFFF', '#FFF8DC']
+    });
+    
+    fire(0.35, {
+        spread: 100,
+        decay: 0.91,
+        scalar: 0.8,
+        colors: ['#FFD700', '#FFFFFF']
+    });
+    
+    fire(0.1, {
+        spread: 120,
+        startVelocity: 25,
+        decay: 0.92,
+        scalar: 1.2,
+        colors: ['#FFD700']
+    });
+    
+    fire(0.1, {
+        spread: 120,
+        startVelocity: 45,
+        colors: ['#FFFFFF']
+    });
+}
+
+// Show success modal
+function showSuccessModal() {
+    const modal = document.getElementById('successModal');
+    modal.classList.remove('hidden');
+    
+    // Add CSS animation for checkmark
+    const style = document.createElement('style');
+    style.textContent = `
+        .checkmark-animate {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawCheckmark 0.6s ease-in-out 0.3s forwards;
+        }
+        
+        @keyframes drawCheckmark {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        #successModal {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Auto-hide after 4 seconds
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 4000);
 }
 
 // Update cart count display
@@ -289,26 +403,60 @@ function updateProductUI(productCard, newStock) {
     }
 }
 
-// Fetch products from Supabase
+// Category and search functionality
+let currentCategory = 'All';
+let currentSearch = '';
+
+// ==========================================
+// PRODUCT FETCHING SYSTEM
+// ==========================================
+// fetchProducts: Retrieves products from Supabase with category and search filtering
+// Returns: Array of product objects matching current filters
 async function fetchProducts() {
     try {
-        // Try REST API approach instead
-        const response = await fetch(`${SUPABASE_URL}product`, {
+        // Base URL for products endpoint
+        let url = `${SUPABASE_URL}product`;
+        
+        // Category Filtering: Add category filter if not 'All'
+        // Supabase syntax: ?category=eq.CategoryName
+        if (currentCategory !== 'All') {
+            url += `?category=eq.${currentCategory}`;
+        }
+        
+        // API Call: Fetch products with authentication headers
+        const response = await fetch(url, {
             headers: {
-                'apikey': SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'Content-Type': 'application/json'
+                'apikey': SUPABASE_ANON_KEY,           // API key for authentication
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, // Bearer token
+                'Content-Type': 'application/json'     // JSON content type
             }
         });
         
         console.log('Response status:', response.status);
         
+        // Error Handling: Check for HTTP errors
         if (!response.ok) {
             console.error('HTTP Error:', response.status, response.statusText);
             return [];
         }
         
-        const products = await response.json();
+        let products = await response.json();
+        
+        // Search Filtering: Apply client-side search if term exists
+        if (currentSearch) {
+            const searchTerm = currentSearch.toLowerCase();
+            products = products.filter(product => {
+                const name = (product.name || '').toLowerCase();
+                const description = (product.description || '').toLowerCase();
+                
+                // Advanced Search: Multiple matching strategies
+                return name.includes(searchTerm) ||           // Direct match
+                       description.includes(searchTerm) ||      // Description match
+                       name.split(' ').some(word => word.includes(searchTerm)) || // Word match
+                       searchTerm.split(' ').some(term => name.includes(term) || description.includes(term)); // Multi-word match
+            });
+        }
+        
         console.log('Products fetched:', products);
         return products;
     } catch (error) {
@@ -317,40 +465,51 @@ async function fetchProducts() {
     }
 }
 
-// Render products dynamically
+// ==========================================
+// PRODUCT RENDERING SYSTEM
+// ==========================================
+// renderProducts: Fetches products and displays them in the grid
 async function renderProducts() {
-    const productsGrid = document.getElementById('productsGrid');
-    if (!productsGrid) return;
-    
-    const products = await fetchProducts();
-    
-    if (products.length === 0) {
-        productsGrid.innerHTML = '<div class="col-span-4 text-center text-gray-500">No products available</div>';
-        return;
+    try {
+        const products = await fetchProducts();
+        const productsGrid = document.getElementById('productsGrid');
+        
+        if (!productsGrid) {
+            console.error('Products grid not found');
+            return;
+        }
+        
+        productsGrid.innerHTML = '';
+        
+        products.forEach(product => {
+            const card = createProductCard(product);
+            productsGrid.appendChild(card);
+        });
+        
+        // Re-attach event listeners
+        attachEventListeners();
+        
+        // Reinitialize scroll animations for new products
+        setTimeout(() => {
+            initScrollAnimations();
+        }, 100);
+    } catch (error) {
+        console.error('Error rendering products:', error);
     }
-    
-    // Clear existing products
-    productsGrid.innerHTML = '';
-    
-    // Render products from database
-    products.forEach(product => {
-        const productCard = createProductCard(product);
-        productsGrid.appendChild(productCard);
-    });
-    
-    // Re-attach event listeners
-    attachEventListeners();
 }
 
-// Create product card element
+// ==========================================
+// PRODUCT CARD CREATION
+// ==========================================
+// createProductCard: Creates individual product card element with glassmorphism design
 function createProductCard(product) {
     const card = document.createElement('div');
     const isOutOfStock = product.stock === 0;
     
-    // Apply grayscale filter for sold out items
+    // Apply glassmorphism design for product cards
     const cardClasses = isOutOfStock 
-        ? 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow grayscale opacity-75 w-full flex flex-col'
-        : 'bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow w-full flex flex-col';
+        ? 'bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg hover:shadow-xl transition-all grayscale opacity-75 w-full flex flex-col border border-white/30'
+        : 'bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg hover:shadow-xl transition-all w-full flex flex-col border border-white/30';
     
     card.className = cardClasses;
     
@@ -368,7 +527,7 @@ function createProductCard(product) {
     card.innerHTML = `
         <div class="relative">
             ${imageContent}
-            ${isOutOfStock ? '<div class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">SOLD OUT</div>' : ''}
+            ${isOutOfStock ? '<div class="absolute top-2 right-2 bg-blue-900 text-white px-3 py-1 rounded-full text-sm font-bold">SOLD OUT</div>' : ''}
         </div>
         <div class="p-3">
             <h3 class="font-bold text-sm mb-1 text-gray-900 truncate">${product.name || 'Unknown Product'}</h3>
@@ -377,10 +536,10 @@ function createProductCard(product) {
                 <span class="text-xs font-bold text-gray-900">${product.price || '0'}</span>
                 <span class="text-xs text-gray-500">Stock: ${product.stock || 0}</span>
             </div>
-            <button class="w-full py-2 rounded-lg font-medium transition-colors text-xs ${
+            <button class="w-full py-3 rounded-full font-medium transition-all duration-300 text-xs transform hover:scale-105 hover:shadow-lg ${
                 isOutOfStock 
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-gray-300 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700'
             }" ${isOutOfStock ? 'disabled' : ''} data-add-to-cart data-product-name="${product.name}" data-product-price="${product.price}">
                 ${isOutOfStock ? 'Sold Out' : 'Add to Cart'}
             </button>
@@ -390,8 +549,86 @@ function createProductCard(product) {
     return card;
 }
 
+// Smooth scroll functionality
+function initSmoothScroll() {
+    // Smooth scroll for navigation links
+    const smoothScrollLinks = document.querySelectorAll('.smooth-scroll');
+    
+    smoothScrollLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            
+            if (targetElement) {
+                const offsetTop = targetElement.offsetTop - 80; // Account for sticky header
+                
+                window.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+    
+    // Scroll to top button functionality
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+            scrollToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+            scrollToTopBtn.classList.add('opacity-100');
+        } else {
+            scrollToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+            scrollToTopBtn.classList.remove('opacity-100');
+        }
+    });
+    
+    scrollToTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
+
 // Attach event listeners to buttons
 function attachEventListeners() {
+    // Category filter buttons
+    const categoryButtons = document.querySelectorAll('.category-btn');
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Update active button styling
+            categoryButtons.forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            this.classList.remove('bg-gray-200', 'text-gray-700');
+            this.classList.add('bg-indigo-600', 'text-white');
+            
+            // Update current category and re-render
+            currentCategory = this.getAttribute('data-category');
+            renderProducts();
+        });
+    });
+    
+    // Search bar functionality with debouncing
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            
+            searchTimeout = setTimeout(() => {
+                currentSearch = this.value.trim();
+                renderProducts();
+            }, 300); // Wait 300ms after typing stops
+        });
+    }
+    
     // Add to Cart button listeners
     const addToCartButtons = document.querySelectorAll('button:not([disabled])');
     
@@ -481,8 +718,44 @@ function showNotification(message, type = 'success') {
     }, 2000);
 }
 
-// Initialize when DOM is loaded
+// ==========================================
+// SCROLL ANIMATION SYSTEM
+// ==========================================
+// Intersection Observer for scroll-triggered animations
+function initScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observe all product cards
+    const productCards = document.querySelectorAll('#productsGrid > div');
+    productCards.forEach((card, index) => {
+        // Initial state: hidden and below
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+        
+        // Start observing
+        observer.observe(card);
+    });
+}
+
+// Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
+    renderProducts();
+    initSmoothScroll();
+    initScrollAnimations();
     // Cart modal event listeners
     const closeCartBtn = document.getElementById('closeCart');
     const clearCartBtn = document.getElementById('clearCartBtn');
