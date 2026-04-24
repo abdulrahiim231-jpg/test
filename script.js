@@ -761,11 +761,35 @@ function initScrollAnimations() {
     });
 }
 
+// ==========================================
+// MOBILE MENU FUNCTIONALITY
+// ==========================================
+// Mobile menu toggle
+function initMobileMenu() {
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Close mobile menu when clicking on links
+        const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+    }
+}
+
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     renderProducts();
     initSmoothScroll();
     initScrollAnimations();
+    initMobileMenu();
     // Cart modal event listeners
     const closeCartBtn = document.getElementById('closeCart');
     const clearCartBtn = document.getElementById('clearCartBtn');
