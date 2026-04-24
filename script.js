@@ -607,7 +607,12 @@ function attachEventListeners() {
     // Category filter buttons
     const categoryButtons = document.querySelectorAll('.category-btn');
     categoryButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        // Handle both click and touch events for better mobile support
+        const handleCategoryClick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Category filter clicked:', this.getAttribute('data-category'));
+            
             // Update active button styling
             categoryButtons.forEach(btn => {
                 btn.classList.remove('bg-blue-900', 'text-white');
@@ -619,9 +624,12 @@ function attachEventListeners() {
             
             // Update current category and re-render
             currentCategory = this.getAttribute('data-category');
-            console.log('Category filter clicked:', currentCategory);
+            console.log('Category filter applied:', currentCategory);
             renderProducts();
-        });
+        };
+        
+        button.addEventListener('click', handleCategoryClick);
+        button.addEventListener('touchstart', handleCategoryClick, { passive: false });
     });
     
     // Search bar functionality with debouncing
@@ -770,16 +778,34 @@ function initMobileMenu() {
     const mobileMenu = document.getElementById('mobileMenu');
     
     if (mobileMenuBtn && mobileMenu) {
-        mobileMenuBtn.addEventListener('click', function() {
+        console.log('Mobile menu initialized');
+        
+        // Handle both click and touch events for better mobile support
+        const toggleMenu = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Mobile menu toggled');
             mobileMenu.classList.toggle('hidden');
-        });
+        };
+        
+        mobileMenuBtn.addEventListener('click', toggleMenu);
+        mobileMenuBtn.addEventListener('touchstart', toggleMenu, { passive: false });
         
         // Close mobile menu when clicking on links
         const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
         mobileMenuLinks.forEach(link => {
-            link.addEventListener('click', function() {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Mobile menu link clicked');
                 mobileMenu.classList.add('hidden');
             });
+            
+            // Also handle touch events for links
+            link.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                console.log('Mobile menu link touched');
+                mobileMenu.classList.add('hidden');
+            }, { passive: false });
         });
     }
 }
