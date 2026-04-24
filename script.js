@@ -272,6 +272,14 @@ function sendOrderToWhatsApp(message) {
 
 // Trigger confetti animation
 function triggerConfetti() {
+    // Check if confetti library is loaded
+    if (typeof confetti === 'undefined') {
+        console.error('Confetti library not loaded');
+        return;
+    }
+    
+    console.log('Triggering confetti animation...');
+    
     // Create multiple confetti bursts for luxury effect
     const count = 200;
     const defaults = {
@@ -421,6 +429,7 @@ async function fetchProducts() {
         // Supabase syntax: ?category=eq.CategoryName
         if (currentCategory !== 'All') {
             url += `?category=eq.${currentCategory}`;
+            console.log('Applying category filter:', currentCategory);
         }
         
         // API Call: Fetch products with authentication headers
@@ -601,15 +610,16 @@ function attachEventListeners() {
         button.addEventListener('click', function() {
             // Update active button styling
             categoryButtons.forEach(btn => {
-                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.remove('bg-blue-900', 'text-white');
                 btn.classList.add('bg-gray-200', 'text-gray-700');
             });
             
             this.classList.remove('bg-gray-200', 'text-gray-700');
-            this.classList.add('bg-indigo-600', 'text-white');
+            this.classList.add('bg-blue-900', 'text-white');
             
             // Update current category and re-render
             currentCategory = this.getAttribute('data-category');
+            console.log('Category filter clicked:', currentCategory);
             renderProducts();
         });
     });
